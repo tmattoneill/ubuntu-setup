@@ -1,28 +1,40 @@
-## === MODULE 02: User Creation ===
-echo "👤 Creating users: ubuntu, moneill, matt..."
-for user in ubuntu moneill matt; do
-  if ! id "$user" &>/dev/null; then
-    adduser --disabled-password --gecos "" "$user"
-    usermod -aG sudo "$user"
-    echo "✅ Created user: $user"
-  else
-    usermod -aG sudo "$user" || true
-    echo "⚠️ User $user already exists; ensured sudo membership."
-  fi
+#!/bin/bash
+set -euo pipefail
 
-  # SSH keys: reuse root's authorized_keys if present
-  if [ -f /root/.ssh/authorized_keys ]; then
-    mkdir -p /home/$user/.ssh
-    cp /root/.ssh/authorized_keys /home/$user/.ssh/authorized_keys
-    chown -R $user:$user /home/$user/.ssh
-    chmod 700 /home/$user/.ssh
-    chmod 600 /home/$user/.ssh/authorized_keys
-  fi
+## === MODULE 03: Zsh + Oh My Zsh ===
 
-  # Passwordless sudo for non-interactive setup
-  sudo_file="/etc/sudoers.d/90-${user}-nopasswd"
-  if [ ! -f "$sudo_file" ]; then
-    echo "${user} ALL=(ALL) NOPASSWD:ALL" > "$sudo_file"
-    chmod 440 "$sudo_file"
-  fi
-done
+echo "🐚 Installing Zsh and Oh My Zsh..."
+
+# Install Zsh if needed
+if ! command -v zsh &>/dev/null; then
+  sudo apt install -y zsh
+fi
+
+# Set Zsh as default shell for current user
+sudo chsh -s "$(which zsh)" "$USER"
+
+# Install Oh My Zsh
+export RUNZSH=no
+export CHSH=no
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+  echo "📦 Installing Oh My Zsh..."
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+else
+  echo "✅ Oh My Zsh already installed."
+fi
+
+# Install plugins
+ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
+
+if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]; then
+  git clone https://github.com/zsh-users/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
+fi
+
+if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
+  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-hig>
+fi
+
+# Patch .zshrc
+sed -i 's/plugins=(git)/plugins=(git sudo zsh-autosuggestions zsh-syntax-highlighting)/' ~/.zshrc
+
+echo "✅ Zsh + Oh My Zsh installed. Reload with: exec zsh"
