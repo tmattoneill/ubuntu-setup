@@ -11,7 +11,7 @@ if ! command -v zsh &>/dev/null; then
 fi
 
 # Set Zsh as default shell for current user
-chsh -s "$(which zsh)"
+sudo usermod -s /usr/bin/zsh "$USER"
 
 # Install Oh My Zsh
 export RUNZSH=no
