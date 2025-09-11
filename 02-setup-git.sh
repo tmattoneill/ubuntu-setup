@@ -67,7 +67,12 @@ if [[ -n "$CURRENT_USER" && -n "$CURRENT_EMAIL" ]]; then
     echo "   Name: $CURRENT_USER"
     echo "   Email: $CURRENT_EMAIL"
     
-    read -rp "Do you want to reconfigure Git? [y/N]: " RECONFIGURE
+    if [[ -t 0 ]]; then
+        read -rp "Do you want to reconfigure Git? [y/N]: " RECONFIGURE
+    else
+        RECONFIGURE="n"
+        echo "Do you want to reconfigure Git? [y/N]: $RECONFIGURE (auto)"
+    fi
     if [[ ! "$RECONFIGURE" =~ ^[Yy]$ ]]; then
         echo "✅ Keeping existing Git configuration"
         exit 0
@@ -85,16 +90,26 @@ echo "🔧 Git configuration setup:"
 if [[ -n "${GIT_USER_NAME:-}" ]]; then
     USER_NAME="$GIT_USER_NAME"
 else
-    read -rp "Enter your full name [$DEFAULT_NAME]: " USER_NAME
-    USER_NAME=${USER_NAME:-$DEFAULT_NAME}
+    if [[ -t 0 ]]; then
+        read -rp "Enter your full name [$DEFAULT_NAME]: " USER_NAME
+        USER_NAME=${USER_NAME:-$DEFAULT_NAME}
+    else
+        USER_NAME="$DEFAULT_NAME"
+        echo "Enter your full name [$DEFAULT_NAME]: $USER_NAME (auto)"
+    fi
 fi
 
 # Get email
 if [[ -n "${GIT_USER_EMAIL:-}" ]]; then
     USER_EMAIL="$GIT_USER_EMAIL"
 else
-    read -rp "Enter your email [$DEFAULT_EMAIL]: " USER_EMAIL
-    USER_EMAIL=${USER_EMAIL:-$DEFAULT_EMAIL}
+    if [[ -t 0 ]]; then
+        read -rp "Enter your email [$DEFAULT_EMAIL]: " USER_EMAIL
+        USER_EMAIL=${USER_EMAIL:-$DEFAULT_EMAIL}
+    else
+        USER_EMAIL="$DEFAULT_EMAIL"
+        echo "Enter your email [$DEFAULT_EMAIL]: $USER_EMAIL (auto)"
+    fi
     
     # Validate email format
     if [[ ! "$USER_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then

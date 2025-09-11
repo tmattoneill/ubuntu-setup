@@ -5,11 +5,20 @@ set -euo pipefail
 
 echo "🔄 Starting system update and basic package installation..."
 
-# Check if running as root
-if [[ $EUID -ne 0 ]]; then
-   echo "❌ This script must be run as root (use sudo)"
+# Check if we have required privileges
+if [[ $EUID -ne 0 ]] && ! sudo -n true 2>/dev/null; then
+   echo "❌ This script requires root privileges. Please run with sudo or ensure passwordless sudo is configured."
    exit 1
 fi
+
+# Define command wrapper for privilege elevation
+run_cmd() {
+    if [[ $EUID -eq 0 ]]; then
+        "$@"
+    else
+        sudo "$@"
+    fi
+}
 
 # Test if system is already updated recently (check if apt update was run in last 6 hours)
 LAST_UPDATE=$(stat -c %Y /var/lib/apt/periodic/update-success-stamp 2>/dev/null || echo 0)
@@ -26,14 +35,14 @@ else
     fi
     
     echo "📦 Updating package lists..."
-    apt update || { echo "❌ apt update failed"; exit 1; }
+    run_cmd apt update || { echo "❌ apt update failed"; exit 1; }
 
     echo "⬆️ Upgrading system packages..."
-    apt upgrade -y || { echo "❌ apt upgrade failed"; exit 1; }
+    run_cmd apt upgrade -y || { echo "❌ apt upgrade failed"; exit 1; }
 
     echo "🧹 Cleaning up package cache..."
-    apt autoremove -y || echo "⚠️ apt autoremove failed, continuing..."
-    apt autoclean || echo "⚠️ apt autoclean failed, continuing..."
+    run_cmd apt autoremove -y || echo "⚠️ apt autoremove failed, continuing..."
+    run_cmd apt autoclean || echo "⚠️ apt autoclean failed, continuing..."
 fi
 
 # Install essential packages if not already present
@@ -43,7 +52,7 @@ echo "📦 Installing essential packages..."
 for package in $ESSENTIAL_PACKAGES; do
     if ! dpkg -l | grep -q "^ii  $package "; then
         echo "   Installing $package..."
-        apt install -y "$package" || { echo "❌ Failed to install $package"; exit 1; }
+        run_cmd apt install -y "$package" || { echo "❌ Failed to install $package"; exit 1; }
     else
         echo "   ✅ $package already installed"
     fi
@@ -62,7 +71,7 @@ if [[ "$CURRENT_TZ" == "Etc/UTC" ]]; then
             exit 1
         fi
         
-        if timedatectl set-timezone "$NEW_TIMEZONE" 2>/dev/null; then
+        if run_cmd timedatectl set-timezone "$NEW_TIMEZONE" 2>/dev/null; then
             echo "✅ Timezone set to $NEW_TIMEZONE"
         else
             echo "⚠️  Invalid timezone '$NEW_TIMEZONE', keeping UTC"
@@ -77,9 +86,9 @@ fi
 # Enable unattended security updates
 echo "🔒 Configuring automatic security updates..."
 if ! dpkg -l | grep -q "^ii  unattended-upgrades "; then
-    apt install -y unattended-upgrades || { echo "❌ Failed to install unattended-upgrades"; exit 1; }
-    echo 'Unattended-Upgrade::Automatic-Reboot "false";' > /etc/apt/apt.conf.d/50unattended-upgrades-custom || { echo "❌ Failed to configure unattended-upgrades"; exit 1; }
-    dpkg-reconfigure -f noninteractive unattended-upgrades
+    run_cmd apt install -y unattended-upgrades || { echo "❌ Failed to install unattended-upgrades"; exit 1; }
+    echo 'Unattended-Upgrade::Automatic-Reboot "false";' | run_cmd tee /etc/apt/apt.conf.d/50unattended-upgrades-custom >/dev/null || { echo "❌ Failed to configure unattended-upgrades"; exit 1; }
+    run_cmd dpkg-reconfigure -f noninteractive unattended-upgrades
     echo "✅ Automatic security updates enabled"
 else
     echo "✅ Unattended upgrades already configured"
@@ -88,13 +97,13 @@ fi
 # Configure firewall basics
 echo "🔥 Configuring UFW firewall..."
 if ! command -v ufw &>/dev/null; then
-    apt install -y ufw || { echo "❌ Failed to install ufw"; exit 1; }
+    run_cmd apt install -y ufw || { echo "❌ Failed to install ufw"; exit 1; }
 fi
 
-if ufw status | grep -q "Status: inactive"; then
+if run_cmd ufw status | grep -q "Status: inactive"; then
     # Allow SSH before enabling firewall
-    ufw allow ssh
-    echo "y" | ufw enable
+    run_cmd ufw allow ssh
+    echo "y" | run_cmd ufw enable
     echo "✅ UFW firewall enabled with SSH access"
 else
     echo "✅ UFW firewall already active"

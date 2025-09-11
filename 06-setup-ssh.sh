@@ -56,21 +56,36 @@ if [[ -f "$AUTHORIZED_KEYS" ]]; then
         fi
     done
     echo ""
-    read -rp "Do you want to add another SSH public key? [y/N]: " ADD_KEY
+    if [[ -t 0 ]]; then
+        read -rp "Do you want to add another SSH public key? [y/N]: " ADD_KEY
+    else
+        ADD_KEY="n"
+        echo "Do you want to add another SSH public key? [y/N]: $ADD_KEY (auto)"
+    fi
 else
     echo "No authorized_keys file found."
-    read -rp "Do you want to add an SSH public key for remote access? [Y/n]: " ADD_KEY
-    ADD_KEY=${ADD_KEY:-y}
+    if [[ -t 0 ]]; then
+        read -rp "Do you want to add an SSH public key for remote access? [Y/n]: " ADD_KEY
+        ADD_KEY=${ADD_KEY:-y}
+    else
+        ADD_KEY="n"
+        echo "Do you want to add an SSH public key for remote access? [Y/n]: $ADD_KEY (auto)"
+    fi
 fi
 
 if [[ "$ADD_KEY" =~ ^[Yy]$ ]]; then
     echo ""
-    echo "📝 Please paste your SSH public key (the content of your id_rsa.pub file):"
-    echo "   It should start with 'ssh-rsa', 'ssh-ed25519', etc."
-    echo "   Press Enter when done, or Ctrl+C to skip:"
-    echo ""
-    
-    read -r PUBLIC_KEY
+    if [[ -t 0 ]]; then
+        echo "📝 Please paste your SSH public key (the content of your id_rsa.pub file):"
+        echo "   It should start with 'ssh-rsa', 'ssh-ed25519', etc."
+        echo "   Press Enter when done, or Ctrl+C to skip:"
+        echo ""
+        
+        read -r PUBLIC_KEY
+    else
+        PUBLIC_KEY=""
+        echo "📝 SSH public key input skipped in automatic mode"
+    fi
     
     if [[ -n "$PUBLIC_KEY" ]]; then
         # Validate the public key format
@@ -100,11 +115,21 @@ CLIENT_PUBLIC_KEY="$SSH_DIR/id_rsa.pub"
 
 if [[ -f "$CLIENT_PRIVATE_KEY" ]]; then
     echo "✅ SSH client key already exists: $CLIENT_PRIVATE_KEY"
-    read -rp "Do you want to replace it with a new key? [y/N]: " REPLACE_KEY
+    if [[ -t 0 ]]; then
+        read -rp "Do you want to replace it with a new key? [y/N]: " REPLACE_KEY
+    else
+        REPLACE_KEY="n"
+        echo "Do you want to replace it with a new key? [y/N]: $REPLACE_KEY (auto)"
+    fi
 else
     echo "No SSH client key found."
-    read -rp "Do you want to generate a new SSH key pair for this user? [Y/n]: " REPLACE_KEY
-    REPLACE_KEY=${REPLACE_KEY:-y}
+    if [[ -t 0 ]]; then
+        read -rp "Do you want to generate a new SSH key pair for this user? [Y/n]: " REPLACE_KEY
+        REPLACE_KEY=${REPLACE_KEY:-y}
+    else
+        REPLACE_KEY="n"
+        echo "Do you want to generate a new SSH key pair for this user? [Y/n]: $REPLACE_KEY (auto)"
+    fi
 fi
 
 if [[ "$REPLACE_KEY" =~ ^[Yy]$ ]]; then
@@ -114,12 +139,22 @@ if [[ "$REPLACE_KEY" =~ ^[Yy]$ ]]; then
     echo "2. Paste existing private key"
     echo "3. Skip client key setup"
     echo ""
-    read -rp "Choose option [1-3]: " KEY_OPTION
+    if [[ -t 0 ]]; then
+        read -rp "Choose option [1-3]: " KEY_OPTION
+    else
+        KEY_OPTION="3"
+        echo "Choose option [1-3]: $KEY_OPTION (auto - skip)"
+    fi
     
     case $KEY_OPTION in
         1)
             # Generate new key pair
-            read -rp "Enter email for key comment [$(run_as_user git config --global user.email 2>/dev/null || echo "user@$(hostname)")]: " KEY_EMAIL
+            if [[ -t 0 ]]; then
+                read -rp "Enter email for key comment [$(run_as_user git config --global user.email 2>/dev/null || echo "user@$(hostname)")]: " KEY_EMAIL
+            else
+                KEY_EMAIL=$(run_as_user git config --global user.email 2>/dev/null || echo "user@$(hostname)")
+                echo "Enter email for key comment: $KEY_EMAIL (auto)"
+            fi
             KEY_EMAIL=${KEY_EMAIL:-$(run_as_user git config --global user.email 2>/dev/null || echo "user@$(hostname)")}
             
             echo "🔑 Generating new SSH key pair..."
@@ -237,7 +272,12 @@ if command -v systemctl &>/dev/null; then
     else
         echo "⚠️  SSH service is not running"
         if [[ $EUID -eq 0 ]] || sudo -n true 2>/dev/null; then
-            read -rp "Do you want to start the SSH service? [Y/n]: " START_SSH
+            if [[ -t 0 ]]; then
+                read -rp "Do you want to start the SSH service? [Y/n]: " START_SSH
+            else
+                START_SSH="y"
+                echo "Do you want to start the SSH service? [Y/n]: $START_SSH (auto)"
+            fi
             START_SSH=${START_SSH:-y}
             if [[ "$START_SSH" =~ ^[Yy]$ ]]; then
                 if [[ $EUID -eq 0 ]]; then
