@@ -48,6 +48,12 @@ if command -v docker &>/dev/null; then
         echo "✅ Docker service started and enabled"
     fi
 else
+    # Check network connectivity before Docker installation
+    if ! curl -s --max-time 5 --head https://download.docker.com >/dev/null 2>&1; then
+        echo "❌ Cannot reach Docker repositories. Please check your internet connection."
+        exit 1
+    fi
+    
     echo "📦 Installing Docker..."
     
     # Install prerequisites
@@ -72,9 +78,15 @@ else
     run_cmd apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin
     
     # Start and enable Docker
-    run_cmd systemctl start docker
     run_cmd systemctl enable docker
+    run_cmd systemctl start docker
     
+    # Wait for Docker to start and verify
+    sleep 3
+    if ! systemctl is-active --quiet docker; then
+        echo "❌ Docker failed to start properly"
+        exit 1
+    fi
     echo "✅ Docker installed and started"
 fi
 

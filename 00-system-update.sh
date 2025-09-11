@@ -19,6 +19,12 @@ SIX_HOURS=21600
 if [[ $((CURRENT_TIME - LAST_UPDATE)) -lt $SIX_HOURS ]]; then
     echo "✅ System was updated recently (within 6 hours). Skipping update."
 else
+    # Check network connectivity first
+    if ! curl -s --max-time 5 --head http://archive.ubuntu.com >/dev/null 2>&1; then
+        echo "❌ Cannot reach Ubuntu repositories. Please check your internet connection."
+        exit 1
+    fi
+    
     echo "📦 Updating package lists..."
     apt update || { echo "❌ apt update failed"; exit 1; }
 
@@ -50,6 +56,12 @@ if [[ "$CURRENT_TZ" == "Etc/UTC" ]]; then
     read -rp "Enter timezone (e.g., America/New_York) or press Enter to keep UTC: " NEW_TIMEZONE
     
     if [[ -n "$NEW_TIMEZONE" ]]; then
+        # Validate timezone format
+        if [[ ! "$NEW_TIMEZONE" =~ ^[A-Za-z_]+(/[A-Za-z_]+)*$ ]]; then
+            echo "❌ Invalid timezone format. Use format like 'America/New_York' or 'Europe/London'"
+            exit 1
+        fi
+        
         if timedatectl set-timezone "$NEW_TIMEZONE" 2>/dev/null; then
             echo "✅ Timezone set to $NEW_TIMEZONE"
         else
@@ -66,7 +78,7 @@ fi
 echo "🔒 Configuring automatic security updates..."
 if ! dpkg -l | grep -q "^ii  unattended-upgrades "; then
     apt install -y unattended-upgrades || { echo "❌ Failed to install unattended-upgrades"; exit 1; }
-    echo 'Unattended-Upgrade::Automatic-Reboot "false";' > /etc/apt/apt.conf.d/50unattended-upgrades-custom
+    echo 'Unattended-Upgrade::Automatic-Reboot "false";' > /etc/apt/apt.conf.d/50unattended-upgrades-custom || { echo "❌ Failed to configure unattended-upgrades"; exit 1; }
     dpkg-reconfigure -f noninteractive unattended-upgrades
     echo "✅ Automatic security updates enabled"
 else

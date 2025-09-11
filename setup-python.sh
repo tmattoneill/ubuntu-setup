@@ -20,7 +20,7 @@ sudo apt install -y python3.11 python3.11-venv python3.11-distutils
 
 # Install pip for Python 3.11
 echo "📦 Installing pip for Python 3.11..."
-curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+curl --max-time 30 --retry 3 --retry-delay 2 -sS https://bootstrap.pypa.io/get-pip.py | python3.11
 
 # Ensure ~/.local/bin is in PATH
 ZSHRC="${HOME:-/tmp}/.zshrc"
@@ -39,7 +39,7 @@ echo "✅ pip version: $(pip --version)"
 ## === PYENV INSTALL ===
 if [ ! -d "${HOME:-/tmp}/.pyenv" ]; then
   echo "📥 Installing pyenv..."
-  curl https://pyenv.run | bash
+  curl --max-time 60 --retry 3 --retry-delay 2 https://pyenv.run | bash
 else
   echo "✅ pyenv already installed."
 fi

@@ -12,7 +12,7 @@ ZSHRC="${HOME:-/tmp}/.zshrc"
 # Install NVM if missing
 if [ ! -d "$NVM_DIR" ]; then
   echo "⬇️  Cloning NVM..."
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+  curl --max-time 30 --retry 3 --retry-delay 2 -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 else
   echo "✅ NVM already installed at $NVM_DIR"
 fi

@@ -51,7 +51,8 @@ if [[ -f "$AUTHORIZED_KEYS" ]]; then
     echo "Current authorized keys:"
     run_as_user cat "$AUTHORIZED_KEYS" | while read -r line; do
         if [[ -n "$line" && ! "$line" =~ ^# ]]; then
-            echo "   $(echo "$line" | cut -d' ' -f3 || echo "unnamed key")"
+            KEY_COMMENT=$(echo "$line" | cut -d' ' -f3- 2>/dev/null || echo "unnamed key")
+            echo "   $KEY_COMMENT"
         fi
     done
     echo ""
@@ -240,11 +241,20 @@ if command -v systemctl &>/dev/null; then
             START_SSH=${START_SSH:-y}
             if [[ "$START_SSH" =~ ^[Yy]$ ]]; then
                 if [[ $EUID -eq 0 ]]; then
-                    systemctl enable --now ssh 2>/dev/null || systemctl enable --now sshd 2>/dev/null
+                    systemctl enable ssh 2>/dev/null || systemctl enable sshd 2>/dev/null
+                    systemctl start ssh 2>/dev/null || systemctl start sshd 2>/dev/null
                 else
-                    sudo systemctl enable --now ssh 2>/dev/null || sudo systemctl enable --now sshd 2>/dev/null
+                    sudo systemctl enable ssh 2>/dev/null || sudo systemctl enable sshd 2>/dev/null
+                    sudo systemctl start ssh 2>/dev/null || sudo systemctl start sshd 2>/dev/null
                 fi
-                echo "✅ SSH service started and enabled"
+                
+                # Verify SSH service is running
+                sleep 2
+                if systemctl is-active --quiet ssh || systemctl is-active --quiet sshd; then
+                    echo "✅ SSH service started and enabled"
+                else
+                    echo "⚠️ SSH service may not be running properly"
+                fi
             fi
         fi
     fi

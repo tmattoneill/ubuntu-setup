@@ -81,6 +81,12 @@ export CHSH=no
 OMZ_DIR="$USER_HOME/.oh-my-zsh"
 
 if [[ ! -d "$OMZ_DIR" ]]; then
+    # Check network connectivity before Oh My Zsh installation
+    if ! curl -s --max-time 5 --head https://raw.githubusercontent.com >/dev/null 2>&1; then
+        echo "❌ Cannot reach GitHub. Please check your internet connection."
+        exit 1
+    fi
+    
     echo "📦 Installing Oh My Zsh..."
     curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | run_as_user sh -s - --unattended || { echo "❌ Failed to install Oh My Zsh"; exit 1; }
     echo "✅ Oh My Zsh installed"

@@ -66,7 +66,7 @@ install_nerd_font() {
     fi
     
     echo "📥 Downloading $font_name..."
-    if run_as_user curl -fLo "$FONTS_DIR/$font_file" "$font_url"; then
+    if run_as_user curl --max-time 30 --retry 3 --retry-delay 2 -fLo "$FONTS_DIR/$font_file" "$font_url"; then
         echo "✅ $font_name installed"
     else
         echo "❌ Failed to download $font_name"

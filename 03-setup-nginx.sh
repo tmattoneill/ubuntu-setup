@@ -39,8 +39,15 @@ else
     run_cmd apt install -y nginx
     
     echo "🔄 Starting and enabling Nginx..."
-    run_cmd systemctl start nginx
     run_cmd systemctl enable nginx
+    run_cmd systemctl start nginx
+    
+    # Wait for nginx to start and verify
+    sleep 2
+    if ! systemctl is-active --quiet nginx; then
+        echo "❌ Nginx failed to start properly"
+        exit 1
+    fi
     echo "✅ Nginx installed and started"
 fi
 
@@ -213,7 +220,7 @@ else
 fi
 
 # Get server IP for display
-SERVER_IP=$(curl -s -4 ifconfig.me 2>/dev/null || echo "localhost")
+SERVER_IP=$(curl --max-time 10 --retry 2 -s -4 ifconfig.me 2>/dev/null || echo "localhost")
 
 echo ""
 echo "✅ Nginx setup complete!"

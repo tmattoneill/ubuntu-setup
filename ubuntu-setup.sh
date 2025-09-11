@@ -6,7 +6,7 @@ set -euo pipefail
 ## Supports both root and user execution with proper privilege handling
 
 # Script metadata
-SCRIPT_VERSION="1.1.0"
+SCRIPT_VERSION="2.0.0"
 
 # Determine script directory - handle both local execution and curl|bash
 if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
@@ -39,7 +39,7 @@ download_scripts() {
     fi
     
     log "INFO" "Setting up temporary directory for script downloads..."
-    mkdir -p "$SCRIPT_DIR"
+    mkdir -p "$SCRIPT_DIR" || { echo "❌ Failed to create temporary directory: $SCRIPT_DIR"; exit 1; }
     
     local required_scripts=(
         "00-system-update.sh"
@@ -65,7 +65,7 @@ download_scripts() {
         
         echo -n "  Downloading $script... "
         if curl -fsSL "$url" -o "$dest"; then
-            chmod +x "$dest"
+            chmod +x "$dest" || echo "⚠️ Could not make $script executable"
             echo "✅"
         else
             echo "❌"
@@ -135,6 +135,14 @@ check_dependencies() {
     if ! grep -qi ubuntu /etc/os-release 2>/dev/null; then
         log "ERROR" "This script is designed for Ubuntu systems only"
         exit 1
+    fi
+    
+    # Check network connectivity before downloading
+    if [[ "${DOWNLOAD_MODE:-}" == "true" ]]; then
+        if ! curl -s --max-time 5 --head https://raw.githubusercontent.com >/dev/null 2>&1; then
+            log "ERROR" "Cannot reach GitHub. Please check your internet connection."
+            exit 1
+        fi
     fi
     
     # Download scripts if running via curl|bash
@@ -228,7 +236,7 @@ execute_script() {
     
     if [[ ! -x "$script_path" ]]; then
         log "INFO" "Making script executable: $script_name"
-        chmod +x "$script_path"
+        chmod +x "$script_path" || echo "⚠️ Could not make $script_name executable"
     fi
     
     # Execute the script with proper environment

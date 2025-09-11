@@ -36,14 +36,21 @@ get_user_home() {
 # Install git if not present
 if ! command -v git &>/dev/null; then
     echo "📦 Installing Git..."
-    if [[ $EUID -eq 0 ]]; then
-        apt update
-        apt install -y git
-    else
-        sudo apt update
-        sudo apt install -y git
+    
+    # Check for required commands
+    if ! command -v apt &>/dev/null; then
+        echo "❌ apt command not found. This script requires Ubuntu/Debian."
+        exit 1
     fi
-    echo "✅ Git installed"
+    
+    if [[ $EUID -eq 0 ]]; then
+        apt update || { echo "❌ Failed to update package list"; exit 1; }
+        apt install -y git || { echo "❌ Failed to install Git"; exit 1; }
+    else
+        sudo apt update || { echo "❌ Failed to update package list"; exit 1; }
+        sudo apt install -y git || { echo "❌ Failed to install Git"; exit 1; }
+    fi
+    echo "✅ Git installed: $(git --version)"
 else
     echo "✅ Git already installed: $(git --version)"
 fi
@@ -88,6 +95,12 @@ if [[ -n "${GIT_USER_EMAIL:-}" ]]; then
 else
     read -rp "Enter your email [$DEFAULT_EMAIL]: " USER_EMAIL
     USER_EMAIL=${USER_EMAIL:-$DEFAULT_EMAIL}
+    
+    # Validate email format
+    if [[ ! "$USER_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+        echo "❌ Invalid email format. Please enter a valid email address."
+        exit 1
+    fi
 fi
 
 # Configure git

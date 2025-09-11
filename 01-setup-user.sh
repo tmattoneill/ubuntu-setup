@@ -21,12 +21,24 @@ if [[ -z "${SETUP_USERNAME:-}" ]]; then
     echo "👤 User account setup:"
     read -rp "Enter username [$DEFAULT_USERNAME]: " SETUP_USERNAME
     SETUP_USERNAME=${SETUP_USERNAME:-$DEFAULT_USERNAME}
+    
+    # Validate username
+    if [[ ! "$SETUP_USERNAME" =~ ^[a-z][a-z0-9_-]{0,31}$ ]]; then
+        echo "❌ Invalid username. Must start with a letter and contain only lowercase letters, numbers, hyphens, and underscores (max 32 chars)"
+        exit 1
+    fi
 fi
 
 # Prompt for full name
 if [[ -z "${SETUP_FULLNAME:-}" ]]; then
     read -rp "Enter full name [$DEFAULT_FULLNAME]: " SETUP_FULLNAME
     SETUP_FULLNAME=${SETUP_FULLNAME:-$DEFAULT_FULLNAME}
+    
+    # Validate full name
+    if [[ ${#SETUP_FULLNAME} -gt 50 ]]; then
+        echo "❌ Full name too long (max 50 characters)"
+        exit 1
+    fi
 fi
 
 # Check if user already exists
@@ -83,14 +95,14 @@ echo "📁 Setting up user directories..."
 sudo -u "$SETUP_USERNAME" mkdir -p "$USER_HOME"/{bin,projects,backups,.local/bin}
 
 # Ensure proper ownership
-chown -R "$SETUP_USERNAME:$SETUP_USERNAME" "$USER_HOME"
+chown -R "$SETUP_USERNAME:$SETUP_USERNAME" "$USER_HOME" || { echo "❌ Failed to set ownership of user home directory"; exit 1; }
 
 # Set up sudo without password for initial setup (will be removed later)
 SUDOERS_FILE="/etc/sudoers.d/setup-$SETUP_USERNAME"
 if [[ ! -f "$SUDOERS_FILE" ]]; then
     echo "🔓 Temporarily enabling passwordless sudo for setup..."
-    echo "$SETUP_USERNAME ALL=(ALL) NOPASSWD:ALL" > "$SUDOERS_FILE"
-    chmod 440 "$SUDOERS_FILE"
+    echo "$SETUP_USERNAME ALL=(ALL) NOPASSWD:ALL" > "$SUDOERS_FILE" || { echo "❌ Failed to create sudoers file"; exit 1; }
+    chmod 440 "$SUDOERS_FILE" || { echo "❌ Failed to set sudoers file permissions"; exit 1; }
     echo "⚠️  Note: Passwordless sudo is temporary and will be removed after setup"
 fi
 
@@ -129,7 +141,7 @@ echo "   Username: $SETUP_USERNAME"
 echo "   Full name: $SETUP_FULLNAME"
 echo "   Home: $USER_HOME"
 echo "   Shell: $(getent passwd "$SETUP_USERNAME" 2>/dev/null | cut -d: -f7 || echo "unknown")"
-echo "   Groups: $(groups "$SETUP_USERNAME" | cut -d: -f2)"
+echo "   Groups: $(groups "$SETUP_USERNAME" 2>/dev/null | cut -d: -f2 || echo "unknown")"
 echo ""
 echo "🔄 Remaining setup scripts will run as '$SETUP_USERNAME' with sudo privileges"
 echo ""
