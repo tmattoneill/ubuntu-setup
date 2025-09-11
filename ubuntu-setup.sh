@@ -6,7 +6,7 @@ set -euo pipefail
 ## Supports both root and user execution with proper privilege handling
 
 # Script metadata
-SCRIPT_VERSION="1.0.4"
+SCRIPT_VERSION="1.0.5"
 
 # Determine script directory - handle both local execution and curl|bash
 if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
@@ -367,7 +367,11 @@ run_installation() {
     echo ""
     log "INFO" "📊 Setup Summary:"
     echo "   Total time: ${minutes}m ${seconds}s"
-    echo "   Components attempted: $((${#failed_scripts[@]} > 0 ? $(echo "${#failed_scripts[@]}") : "All successful"))"
+    if [[ ${#failed_scripts[@]} -gt 0 ]]; then
+        echo "   Failed components: ${#failed_scripts[@]}"
+    else
+        echo "   All components successful: ✅"
+    fi
     echo ""
     
     # Post-installation instructions

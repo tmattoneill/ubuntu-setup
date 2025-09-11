@@ -57,17 +57,21 @@ eval "$(pyenv init -)"
 EOF
 fi
 
-# Load pyenv immediately
+# Load pyenv immediately (disable strict mode temporarily for pyenv)
 export PYENV_ROOT="${HOME:-/tmp}/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
+set +u  # Temporarily disable unbound variable checking for pyenv
 eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
+set -u  # Re-enable unbound variable checking
 
 # Install Python via pyenv
 PYENV_PYTHON="3.11.9"
 if ! pyenv versions | grep -q "$PYENV_PYTHON"; then
   echo "🐍 Installing Python $PYENV_PYTHON via pyenv..."
   pyenv install "$PYENV_PYTHON"
+else
+  echo "✅ Python $PYENV_PYTHON already installed via pyenv"
 fi
 
 pyenv global "$PYENV_PYTHON"

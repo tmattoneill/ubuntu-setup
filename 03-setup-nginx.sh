@@ -59,7 +59,11 @@ INDEX_FILE="$NGINX_ROOT/index.nginx-debian.html"
 
 if [[ -f "$INDEX_FILE" ]]; then
     echo "🏠 Creating custom welcome page..."
-    run_cmd cat > "$NGINX_ROOT/index.html" << 'EOF'
+    if [[ $EUID -eq 0 ]]; then
+        cat > "$NGINX_ROOT/index.html" << 'EOF'
+    else
+        sudo tee "$NGINX_ROOT/index.html" > /dev/null << 'EOF'
+    fi
 <!DOCTYPE html>
 <html>
 <head>
@@ -155,7 +159,11 @@ TEMPLATE_FILE="$SITES_AVAILABLE/template"
 
 if [[ ! -f "$TEMPLATE_FILE" ]]; then
     echo "📝 Creating server block template..."
-    run_cmd cat > "$TEMPLATE_FILE" << 'EOF'
+    if [[ $EUID -eq 0 ]]; then
+        cat > "$TEMPLATE_FILE" << 'EOF'
+    else
+        sudo tee "$TEMPLATE_FILE" > /dev/null << 'EOF'
+    fi
 # Example server block for a new site
 # Copy this file and modify as needed
 # Enable with: sudo ln -s /etc/nginx/sites-available/your-site /etc/nginx/sites-enabled/

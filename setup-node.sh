@@ -27,9 +27,11 @@ if ! grep -q 'nvm.sh' "$ZSHRC"; then
   } >> "$ZSHRC"
 fi
 
-# Load NVM into current session
+# Load NVM into current session (disable strict mode temporarily for NVM)
 # shellcheck disable=SC1090
+set +u  # Temporarily disable unbound variable checking for NVM
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+set -u  # Re-enable unbound variable checking
 
 # Install + use latest LTS Node
 if ! command -v node &>/dev/null; then
