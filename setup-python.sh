@@ -23,10 +23,11 @@ echo "📦 Installing pip for Python 3.11..."
 curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
 
 # Ensure ~/.local/bin is in PATH
-if ! grep -q '.local/bin' ~/.zshrc; then
+ZSHRC="${HOME:-/tmp}/.zshrc"
+if ! grep -q '.local/bin' "$ZSHRC"; then
   echo '🔧 Adding ~/.local/bin to PATH in ~/.zshrc'
-  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
-  export PATH="$HOME/.local/bin:$PATH"
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$ZSHRC"
+  export PATH="${HOME:-/tmp}/.local/bin:$PATH"
 fi
 
 # Symlink python to python3.11 for compatibility (optional)
@@ -36,7 +37,7 @@ echo "✅ Python version: $(python --version)"
 echo "✅ pip version: $(pip --version)"
 
 ## === PYENV INSTALL ===
-if [ ! -d "$HOME/.pyenv" ]; then
+if [ ! -d "${HOME:-/tmp}/.pyenv" ]; then
   echo "📥 Installing pyenv..."
   curl https://pyenv.run | bash
 else
@@ -44,9 +45,9 @@ else
 fi
 
 # Add pyenv to shell startup if missing
-if ! grep -q 'pyenv init' ~/.zshrc; then
+if ! grep -q 'pyenv init' "$ZSHRC"; then
   echo '🔧 Adding pyenv config to ~/.zshrc...'
-  cat <<'EOF' >> ~/.zshrc
+  cat <<'EOF' >> "$ZSHRC"
 
 # pyenv
 export PYENV_ROOT="$HOME/.pyenv"
@@ -57,7 +58,7 @@ EOF
 fi
 
 # Load pyenv immediately
-export PYENV_ROOT="$HOME/.pyenv"
+export PYENV_ROOT="${HOME:-/tmp}/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init --path)"
 eval "$(pyenv init -)"

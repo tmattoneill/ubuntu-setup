@@ -6,8 +6,8 @@ set -euo pipefail
 echo "📦 Installing NVM and latest Node.js LTS..."
 
 # Vars
-export NVM_DIR="$HOME/.nvm"
-ZSHRC="$HOME/.zshrc"
+export NVM_DIR="${HOME:-/tmp}/.nvm"
+ZSHRC="${HOME:-/tmp}/.zshrc"
 
 # Install NVM if missing
 if [ ! -d "$NVM_DIR" ]; then
