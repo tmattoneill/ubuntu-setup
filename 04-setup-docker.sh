@@ -60,7 +60,7 @@ else
     
     # Add Docker's official GPG key
     run_cmd mkdir -p /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | run_cmd gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | run_cmd gpg --dearmor -o /etc/apt/keyrings/docker.gpg || { echo "❌ Failed to add Docker GPG key"; exit 1; }
     
     # Set up the repository
     echo \
@@ -83,7 +83,7 @@ TARGET_USER=""
 if [[ -n "${SETUP_USERNAME:-}" ]]; then
     TARGET_USER="$SETUP_USERNAME"
 elif [[ $EUID -ne 0 ]]; then
-    TARGET_USER="$USER"
+    TARGET_USER="${USER:-$(whoami)}"
 fi
 
 if [[ -n "$TARGET_USER" ]]; then
@@ -109,7 +109,7 @@ else
     # If it's not available, install the standalone version
     if ! docker compose version &>/dev/null 2>&1; then
         # Get latest version from GitHub API
-        COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest 2>/dev/null | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' || echo "v2.21.0")
         
         if [[ -z "$COMPOSE_VERSION" ]]; then
             COMPOSE_VERSION="v2.21.0"  # Fallback version
@@ -117,7 +117,7 @@ else
         fi
         
         echo "📥 Downloading Docker Compose $COMPOSE_VERSION..."
-        run_cmd curl -L "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        run_cmd curl -L "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose || { echo "❌ Failed to download Docker Compose"; exit 1; }
         run_cmd chmod +x /usr/local/bin/docker-compose
         
         # Create symlink for compatibility

@@ -43,15 +43,15 @@ if id "$SETUP_USERNAME" &>/dev/null; then
     fi
     
     # Check current shell
-    CURRENT_SHELL=$(getent passwd "$SETUP_USERNAME" | cut -d: -f7)
+    CURRENT_SHELL=$(getent passwd "$SETUP_USERNAME" 2>/dev/null | cut -d: -f7 || echo "/bin/bash")
     if [[ "$CURRENT_SHELL" == "$DEFAULT_SHELL" ]]; then
         echo "✅ User shell already set to zsh"
     else
         echo "🐚 Setting shell to zsh..."
         # Install zsh if not present
         if ! command -v zsh &>/dev/null; then
-            apt update
-            apt install -y zsh
+            apt update || { echo "❌ apt update failed"; exit 1; }
+            apt install -y zsh || { echo "❌ Failed to install zsh"; exit 1; }
         fi
         chsh -s "$DEFAULT_SHELL" "$SETUP_USERNAME"
         echo "✅ Shell changed to zsh for '$SETUP_USERNAME'"
@@ -128,7 +128,7 @@ echo "📊 User details:"
 echo "   Username: $SETUP_USERNAME"
 echo "   Full name: $SETUP_FULLNAME"
 echo "   Home: $USER_HOME"
-echo "   Shell: $(getent passwd "$SETUP_USERNAME" | cut -d: -f7)"
+echo "   Shell: $(getent passwd "$SETUP_USERNAME" 2>/dev/null | cut -d: -f7 || echo "unknown")"
 echo "   Groups: $(groups "$SETUP_USERNAME" | cut -d: -f2)"
 echo ""
 echo "🔄 Remaining setup scripts will run as '$SETUP_USERNAME' with sudo privileges"

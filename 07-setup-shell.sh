@@ -30,17 +30,25 @@ run_cmd() {
 
 get_user_home() {
     if [[ $EUID -eq 0 ]]; then
-        echo "/home/${SETUP_USERNAME:-}"
+        if [[ -n "${SETUP_USERNAME:-}" ]]; then
+            echo "/home/$SETUP_USERNAME"
+        else
+            echo "/root"
+        fi
     else
-        echo "$HOME"
+        echo "${HOME:-/tmp}"
     fi
 }
 
 get_target_user() {
     if [[ $EUID -eq 0 ]]; then
-        echo "${SETUP_USERNAME:-}"
+        if [[ -n "${SETUP_USERNAME:-}" ]]; then
+            echo "$SETUP_USERNAME"
+        else
+            echo "root"
+        fi
     else
-        echo "$USER"
+        echo "${USER:-$(whoami)}"
     fi
 }
 
@@ -58,7 +66,7 @@ else
 fi
 
 # Check current shell
-CURRENT_SHELL=$(getent passwd "$TARGET_USER" | cut -d: -f7)
+CURRENT_SHELL=$(getent passwd "$TARGET_USER" 2>/dev/null | cut -d: -f7 || echo "/bin/bash")
 if [[ "$CURRENT_SHELL" != "/usr/bin/zsh" && "$CURRENT_SHELL" != "/bin/zsh" ]]; then
     echo "🔧 Setting Zsh as default shell for $TARGET_USER..."
     run_cmd chsh -s "$(which zsh)" "$TARGET_USER"
@@ -74,7 +82,7 @@ OMZ_DIR="$USER_HOME/.oh-my-zsh"
 
 if [[ ! -d "$OMZ_DIR" ]]; then
     echo "📦 Installing Oh My Zsh..."
-    run_as_user sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | run_as_user sh -s - --unattended || { echo "❌ Failed to install Oh My Zsh"; exit 1; }
     echo "✅ Oh My Zsh installed"
 else
     echo "✅ Oh My Zsh already installed"
@@ -256,7 +264,7 @@ echo ""
 echo "✅ Zsh shell environment setup complete!"
 echo "📊 Configuration summary:"
 echo "   Shell: $(which zsh)"
-echo "   Default shell for $TARGET_USER: $(getent passwd "$TARGET_USER" | cut -d: -f7)"
+echo "   Default shell for $TARGET_USER: $(getent passwd "$TARGET_USER" 2>/dev/null | cut -d: -f7 || echo "unknown")"
 echo "   Oh My Zsh: ✅ Installed"
 echo "   Powerlevel10k: ✅ Installed"
 echo "   Plugins: zsh-autosuggestions, zsh-syntax-highlighting, zsh-completions"

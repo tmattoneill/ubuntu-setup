@@ -6,7 +6,7 @@ set -euo pipefail
 ## Supports both root and user execution with proper privilege handling
 
 # Script metadata
-SCRIPT_VERSION="1.0.5"
+SCRIPT_VERSION="1.1.0"
 
 # Determine script directory - handle both local execution and curl|bash
 if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
@@ -199,7 +199,7 @@ handle_privileges() {
         
     else
         # Running as regular user
-        log "INFO" "Running as user: $USER"
+        log "INFO" "Running as user: ${USER:-$(whoami)}"
         
         # Check if user has sudo access
         if ! sudo -n true 2>/dev/null; then
@@ -207,8 +207,8 @@ handle_privileges() {
             exit 1
         fi
         
-        export SETUP_USERNAME="$USER"
-        log "INFO" "Using current user: $USER"
+        export SETUP_USERNAME="${USER:-$(whoami)}"
+        log "INFO" "Using current user: ${USER:-$(whoami)}"
     fi
 }
 

@@ -13,7 +13,7 @@ sudo apt install -y cockpit openssl ufw
 
 # Step 2: Enable Cockpit service
 echo "[+] Enabling and starting Cockpit service..."
-sudo systemctl enable --now cockpit.socket
+sudo systemctl enable --now cockpit.socket || { echo "❌ Failed to enable cockpit.socket"; exit 1; }
 
 # Step 3: Open firewall
 echo "[+] Allowing Cockpit port (9090) via UFW..."
@@ -45,7 +45,7 @@ read -rp "Do you want to install 'cockpit-pcp' for advanced metrics? [y/N]: " IN
 if [[ "$INSTALL_PCP" =~ ^[Yy]$ ]]; then
     echo "[+] Installing Performance Co-Pilot (PCP)..."
     sudo apt install -y cockpit-pcp pcp
-    sudo systemctl enable --now pmcd
+    sudo systemctl enable --now pmcd || echo "⚠️ Failed to enable pmcd, continuing without performance metrics"
 fi
 
 # Step 6: Prompt for Certbot setup (production domains only)
@@ -69,12 +69,12 @@ if [[ "$INSTALL_CERTBOT" =~ ^[Yy]$ ]]; then
     echo "    /etc/letsencrypt/live/$DOMAIN/privkey.pem"
     echo ""
     echo "Edit: /etc/cockpit/ws-certs.d/0-letsencrypt.cert and .key"
-    echo "Then: sudo systemctl restart cockpit"
+    echo "Then: sudo systemctl restart cockpit || echo "⚠️ Failed to restart cockpit, may need manual restart""
 fi
 
 # Final restart
 echo "[+] Restarting Cockpit service..."
-sudo systemctl restart cockpit
+sudo systemctl restart cockpit || echo "⚠️ Failed to restart cockpit, may need manual restart"
 
 # Done
 echo ""
@@ -96,7 +96,7 @@ sudo apt install -y cockpit openssl ufw
 
 # Step 2: Enable Cockpit service
 echo "[+] Enabling and starting Cockpit service..."
-sudo systemctl enable --now cockpit.socket
+sudo systemctl enable --now cockpit.socket || { echo "❌ Failed to enable cockpit.socket"; exit 1; }
 
 # Step 3: Open firewall
 echo "[+] Allowing Cockpit port (9090) via UFW..."
@@ -128,7 +128,7 @@ read -rp "Do you want to install 'cockpit-pcp' for advanced metrics? [y/N]: " IN
 if [[ "$INSTALL_PCP" =~ ^[Yy]$ ]]; then
     echo "[+] Installing Performance Co-Pilot (PCP)..."
     sudo apt install -y cockpit-pcp pcp
-    sudo systemctl enable --now pmcd
+    sudo systemctl enable --now pmcd || echo "⚠️ Failed to enable pmcd, continuing without performance metrics"
 fi
 
 # Step 6: Prompt for Certbot setup (production domains only)
@@ -152,12 +152,12 @@ if [[ "$INSTALL_CERTBOT" =~ ^[Yy]$ ]]; then
     echo "    /etc/letsencrypt/live/$DOMAIN/privkey.pem"
     echo ""
     echo "Edit: /etc/cockpit/ws-certs.d/0-letsencrypt.cert and .key"
-    echo "Then: sudo systemctl restart cockpit"
+    echo "Then: sudo systemctl restart cockpit || echo "⚠️ Failed to restart cockpit, may need manual restart""
 fi
 
 # Final restart
 echo "[+] Restarting Cockpit service..."
-sudo systemctl restart cockpit
+sudo systemctl restart cockpit || echo "⚠️ Failed to restart cockpit, may need manual restart"
 
 # Done
 echo ""

@@ -30,9 +30,13 @@ run_cmd() {
 
 get_user_home() {
     if [[ $EUID -eq 0 ]]; then
-        echo "/home/${SETUP_USERNAME:-}"
+        if [[ -n "${SETUP_USERNAME:-}" ]]; then
+            echo "/home/$SETUP_USERNAME"
+        else
+            echo "/root"
+        fi
     else
-        echo "$HOME"
+        echo "${HOME:-/tmp}"
     fi
 }
 
@@ -139,7 +143,7 @@ run_cmd fc-cache -fv &>/dev/null
 
 # Verify installation
 echo "🔍 Verifying font installation..."
-INSTALLED_FONTS=$(run_as_user fc-list | grep -i "nerd\|meslo\|fira\|jetbrains" | wc -l)
+INSTALLED_FONTS=$(run_as_user fc-list 2>/dev/null | grep -i "nerd\|meslo\|fira\|jetbrains" | wc -l 2>/dev/null || echo "0")
 
 if [[ $INSTALLED_FONTS -gt 0 ]]; then
     echo "✅ Found $INSTALLED_FONTS Nerd Font variants installed"

@@ -13,21 +13,21 @@ fi
 
 # Test if system is already updated recently (check if apt update was run in last 6 hours)
 LAST_UPDATE=$(stat -c %Y /var/lib/apt/periodic/update-success-stamp 2>/dev/null || echo 0)
-CURRENT_TIME=$(date +%s)
+CURRENT_TIME=$(date +%s 2>/dev/null || echo "0")
 SIX_HOURS=21600
 
 if [[ $((CURRENT_TIME - LAST_UPDATE)) -lt $SIX_HOURS ]]; then
     echo "✅ System was updated recently (within 6 hours). Skipping update."
 else
     echo "📦 Updating package lists..."
-    apt update
+    apt update || { echo "❌ apt update failed"; exit 1; }
 
     echo "⬆️ Upgrading system packages..."
-    apt upgrade -y
+    apt upgrade -y || { echo "❌ apt upgrade failed"; exit 1; }
 
     echo "🧹 Cleaning up package cache..."
-    apt autoremove -y
-    apt autoclean
+    apt autoremove -y || echo "⚠️ apt autoremove failed, continuing..."
+    apt autoclean || echo "⚠️ apt autoclean failed, continuing..."
 fi
 
 # Install essential packages if not already present
@@ -37,14 +37,14 @@ echo "📦 Installing essential packages..."
 for package in $ESSENTIAL_PACKAGES; do
     if ! dpkg -l | grep -q "^ii  $package "; then
         echo "   Installing $package..."
-        apt install -y "$package"
+        apt install -y "$package" || { echo "❌ Failed to install $package"; exit 1; }
     else
         echo "   ✅ $package already installed"
     fi
 done
 
 # Configure timezone if not already set to a specific timezone
-CURRENT_TZ=$(timedatectl show --property=Timezone --value)
+CURRENT_TZ=$(timedatectl show --property=Timezone --value 2>/dev/null || echo "Etc/UTC")
 if [[ "$CURRENT_TZ" == "Etc/UTC" ]]; then
     echo "🕐 Current timezone is UTC. Would you like to set a different timezone?"
     read -rp "Enter timezone (e.g., America/New_York) or press Enter to keep UTC: " NEW_TIMEZONE
@@ -65,7 +65,7 @@ fi
 # Enable unattended security updates
 echo "🔒 Configuring automatic security updates..."
 if ! dpkg -l | grep -q "^ii  unattended-upgrades "; then
-    apt install -y unattended-upgrades
+    apt install -y unattended-upgrades || { echo "❌ Failed to install unattended-upgrades"; exit 1; }
     echo 'Unattended-Upgrade::Automatic-Reboot "false";' > /etc/apt/apt.conf.d/50unattended-upgrades-custom
     dpkg-reconfigure -f noninteractive unattended-upgrades
     echo "✅ Automatic security updates enabled"
@@ -76,7 +76,7 @@ fi
 # Configure firewall basics
 echo "🔥 Configuring UFW firewall..."
 if ! command -v ufw &>/dev/null; then
-    apt install -y ufw
+    apt install -y ufw || { echo "❌ Failed to install ufw"; exit 1; }
 fi
 
 if ufw status | grep -q "Status: inactive"; then

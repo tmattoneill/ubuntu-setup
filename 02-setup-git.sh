@@ -23,9 +23,13 @@ run_as_user() {
 
 get_user_home() {
     if [[ $EUID -eq 0 ]]; then
-        echo "/home/${SETUP_USERNAME:-}"
+        if [[ -n "${SETUP_USERNAME:-}" ]]; then
+            echo "/home/$SETUP_USERNAME"
+        else
+            echo "/root"
+        fi
     else
-        echo "$HOME"
+        echo "${HOME:-/tmp}"
     fi
 }
 
