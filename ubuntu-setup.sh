@@ -6,10 +6,10 @@ set -euo pipefail
 ## Supports both root and user execution with proper privilege handling
 
 # Script metadata
-SCRIPT_VERSION="1.0.1"
+SCRIPT_VERSION="1.0.2"
 
 # Determine script directory - handle both local execution and curl|bash
-if [[ "${BASH_SOURCE[0]:-}" ]]; then
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
     # Script is being executed from a file
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 elif [[ "$0" != "bash" ]]; then
