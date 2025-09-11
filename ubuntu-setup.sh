@@ -6,7 +6,7 @@ set -euo pipefail
 ## Supports both root and user execution with proper privilege handling
 
 # Script metadata
-SCRIPT_VERSION="2.0.2"
+SCRIPT_VERSION="2.0.3"
 
 # Determine script directory - handle both local execution and curl|bash
 if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
@@ -193,11 +193,18 @@ handle_privileges() {
         echo "This script will create a main non-root user account for daily use."
         echo ""
         
-        read -rp "Enter username for the main user [webdev]: " MAIN_USERNAME
-        MAIN_USERNAME=${MAIN_USERNAME:-webdev}
-        
-        read -rp "Enter full name for the user [Web Developer]: " MAIN_FULLNAME  
-        MAIN_FULLNAME=${MAIN_FULLNAME:-Web Developer}
+        if [[ -t 0 ]]; then
+            read -rp "Enter username for the main user [webdev]: " MAIN_USERNAME
+            MAIN_USERNAME=${MAIN_USERNAME:-webdev}
+            
+            read -rp "Enter full name for the user [Web Developer]: " MAIN_FULLNAME  
+            MAIN_FULLNAME=${MAIN_FULLNAME:-Web Developer}
+        else
+            MAIN_USERNAME="webdev"
+            MAIN_FULLNAME="Web Developer"
+            echo "Enter username for the main user [webdev]: $MAIN_USERNAME (auto)"
+            echo "Enter full name for the user [Web Developer]: $MAIN_FULLNAME (auto)"
+        fi
         
         # Export for use by other scripts
         export SETUP_USERNAME="$MAIN_USERNAME"
