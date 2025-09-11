@@ -71,8 +71,8 @@ check_dependencies() {
         "03-setup-nginx.sh"
         "04-setup-docker.sh"
         "05-setup-fonts.sh"
-        "setup-ssh.sh"
-        "setup-shell.sh"
+        "06-setup-ssh.sh"
+        "07-setup-shell.sh"
         "setup-node.sh"
         "setup-python.sh"
         "setup-cockpit.sh"
@@ -231,7 +231,7 @@ run_installation() {
         execute_script "01-setup-user.sh" "User Account Creation" || failed_scripts+=("User Setup")
     fi
     
-    execute_script "setup-ssh.sh" "SSH Configuration" || failed_scripts+=("SSH Setup")
+    execute_script "06-setup-ssh.sh" "SSH Configuration" || failed_scripts+=("SSH Setup")
     execute_script "02-setup-git.sh" "Git Configuration" || failed_scripts+=("Git Setup")
     
     # Development environment
@@ -240,7 +240,7 @@ run_installation() {
         log "STEP" "🛠️  Installing Development Environment"
         execute_script "setup-python.sh" "Python Development Environment" || failed_scripts+=("Python")
         execute_script "setup-node.sh" "Node.js Development Environment" || failed_scripts+=("Node.js")
-        execute_script "setup-shell.sh" "Zsh Shell Environment" || failed_scripts+=("Shell")
+        execute_script "07-setup-shell.sh" "Zsh Shell Environment" || failed_scripts+=("Shell")
         
         if [[ "$INSTALL_FONTS" =~ ^[Yy]$ ]]; then
             execute_script "05-setup-fonts.sh" "Terminal Fonts" || failed_scripts+=("Fonts")

@@ -18,10 +18,10 @@ A comprehensive collection of bash scripts for automated Ubuntu server setup, de
 - **`03-setup-nginx.sh`** - Nginx web server with security headers and SSL support
 - **`04-setup-docker.sh`** - Docker Engine, Docker Compose, and user permissions
 - **`05-setup-fonts.sh`** - Nerd Fonts installation for terminal themes
+- **`06-setup-ssh.sh`** - SSH configuration, key management, and authorized_keys setup
+- **`07-setup-shell.sh`** - Zsh + Oh My Zsh + Powerlevel10k + plugins + aliases
 
-### Named Component Scripts
-- **`setup-ssh.sh`** - SSH configuration, key management, and authorized_keys setup
-- **`setup-shell.sh`** - Zsh + Oh My Zsh + Powerlevel10k + plugins + aliases
+### Named Component Scripts (Optional)
 - **`setup-node.sh`** - NVM + Node.js LTS + npm with proper shell integration
 - **`setup-python.sh`** - Python 3.11 + pyenv + pip + development tools
 - **`setup-cockpit.sh`** - Cockpit web console (port 9090)
@@ -80,11 +80,11 @@ sudo ./00-system-update.sh
 sudo ./01-setup-user.sh
 
 # Development environment
-./setup-ssh.sh
+./06-setup-ssh.sh
 ./02-setup-git.sh
 ./setup-python.sh
 ./setup-node.sh
-./setup-shell.sh
+./07-setup-shell.sh
 ./05-setup-fonts.sh
 
 # Web services (requires sudo)
@@ -210,8 +210,8 @@ ubuntu-setup/
 ├── 03-setup-nginx.sh        # Nginx web server
 ├── 04-setup-docker.sh       # Docker installation
 ├── 05-setup-fonts.sh        # Terminal fonts
-├── setup-ssh.sh             # SSH configuration
-├── setup-shell.sh           # Zsh environment
+├── 06-setup-ssh.sh          # SSH configuration
+├── 07-setup-shell.sh        # Zsh environment
 ├── setup-node.sh            # Node.js development
 ├── setup-python.sh          # Python development
 ├── setup-cockpit.sh         # Cockpit interface
