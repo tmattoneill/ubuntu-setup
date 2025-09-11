@@ -6,7 +6,7 @@ set -euo pipefail
 ## Supports both root and user execution with proper privilege handling
 
 # Script metadata
-SCRIPT_VERSION="2.0.4"
+SCRIPT_VERSION="2.0.5"
 
 # Determine script directory - handle both local execution and curl|bash
 if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
@@ -194,7 +194,7 @@ handle_privileges() {
         echo "This script will create a main non-root user account for daily use."
         echo ""
         
-        if [[ -t 0 ]]; then
+        if [[ "${UBUNTU_SETUP_INTERACTIVE:-}" = "true" ]] || [[ -t 0 ]]; then
             read -rp "Enter username for the main user [webdev]: " MAIN_USERNAME
             MAIN_USERNAME=${MAIN_USERNAME:-webdev}
             
@@ -507,19 +507,23 @@ main() {
     check_dependencies
     handle_privileges
     
-    # Check if we're in an interactive session
-    if [[ "$skip_prompts" = false ]] && [[ -t 0 ]] && [[ -t 1 ]]; then
+    # Check if we should prompt for options
+    if [[ "$skip_prompts" = false ]] && [[ -t 1 ]] && [[ "${CI:-}" != "true" ]] && [[ "${DEBIAN_FRONTEND:-}" != "noninteractive" ]]; then
+        # We can output to terminal and we're not in CI/automated environment
+        export UBUNTU_SETUP_INTERACTIVE="true"  # Tell scripts to be interactive
         prompt_for_options
     else
-        # Auto mode - either requested or no TTY available (like curl|bash)
+        # Auto mode - either requested, in CI, or truly non-interactive
         INSTALL_DEV="y"
         INSTALL_WEB="y"
         INSTALL_MGMT="n"  # Management interfaces off by default in auto mode
         INSTALL_FONTS="y"
-        if [[ ! -t 0 ]] || [[ ! -t 1 ]]; then
-            log "INFO" "No TTY detected - running in automatic mode"
-        else
+        if [[ "$skip_prompts" = true ]]; then
             log "INFO" "Auto mode requested: Installing all core and development components"
+        elif [[ "${CI:-}" = "true" ]] || [[ "${DEBIAN_FRONTEND:-}" = "noninteractive" ]]; then
+            log "INFO" "Automated environment detected - using default component selection"
+        else
+            log "INFO" "Non-interactive terminal - using default component selection"
         fi
     fi
     

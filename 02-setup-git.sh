@@ -67,7 +67,7 @@ if [[ -n "$CURRENT_USER" && -n "$CURRENT_EMAIL" ]]; then
     echo "   Name: $CURRENT_USER"
     echo "   Email: $CURRENT_EMAIL"
     
-    if [[ -t 0 ]]; then
+    if [[ "${UBUNTU_SETUP_INTERACTIVE:-}" = "true" ]] || [[ -t 0 ]]; then
         read -rp "Do you want to reconfigure Git? [y/N]: " RECONFIGURE
     else
         RECONFIGURE="n"
@@ -90,7 +90,7 @@ echo "🔧 Git configuration setup:"
 if [[ -n "${GIT_USER_NAME:-}" ]]; then
     USER_NAME="$GIT_USER_NAME"
 else
-    if [[ -t 0 ]]; then
+    if [[ "${UBUNTU_SETUP_INTERACTIVE:-}" = "true" ]] || [[ -t 0 ]]; then
         read -rp "Enter your full name [$DEFAULT_NAME]: " USER_NAME
         USER_NAME=${USER_NAME:-$DEFAULT_NAME}
     else
@@ -103,7 +103,7 @@ fi
 if [[ -n "${GIT_USER_EMAIL:-}" ]]; then
     USER_EMAIL="$GIT_USER_EMAIL"
 else
-    if [[ -t 0 ]]; then
+    if [[ "${UBUNTU_SETUP_INTERACTIVE:-}" = "true" ]] || [[ -t 0 ]]; then
         read -rp "Enter your email [$DEFAULT_EMAIL]: " USER_EMAIL
         USER_EMAIL=${USER_EMAIL:-$DEFAULT_EMAIL}
     else

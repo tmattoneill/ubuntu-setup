@@ -56,7 +56,7 @@ if [[ -f "$AUTHORIZED_KEYS" ]]; then
         fi
     done
     echo ""
-    if [[ -t 0 ]]; then
+    if [[ "${UBUNTU_SETUP_INTERACTIVE:-}" = "true" ]] || [[ -t 0 ]]; then
         read -rp "Do you want to add another SSH public key? [y/N]: " ADD_KEY
     else
         ADD_KEY="n"
@@ -64,7 +64,7 @@ if [[ -f "$AUTHORIZED_KEYS" ]]; then
     fi
 else
     echo "No authorized_keys file found."
-    if [[ -t 0 ]]; then
+    if [[ "${UBUNTU_SETUP_INTERACTIVE:-}" = "true" ]] || [[ -t 0 ]]; then
         read -rp "Do you want to add an SSH public key for remote access? [Y/n]: " ADD_KEY
         ADD_KEY=${ADD_KEY:-y}
     else
@@ -75,7 +75,7 @@ fi
 
 if [[ "$ADD_KEY" =~ ^[Yy]$ ]]; then
     echo ""
-    if [[ -t 0 ]]; then
+    if [[ "${UBUNTU_SETUP_INTERACTIVE:-}" = "true" ]] || [[ -t 0 ]]; then
         echo "📝 Please paste your SSH public key (the content of your id_rsa.pub file):"
         echo "   It should start with 'ssh-rsa', 'ssh-ed25519', etc."
         echo "   Press Enter when done, or Ctrl+C to skip:"
@@ -115,7 +115,7 @@ CLIENT_PUBLIC_KEY="$SSH_DIR/id_rsa.pub"
 
 if [[ -f "$CLIENT_PRIVATE_KEY" ]]; then
     echo "✅ SSH client key already exists: $CLIENT_PRIVATE_KEY"
-    if [[ -t 0 ]]; then
+    if [[ "${UBUNTU_SETUP_INTERACTIVE:-}" = "true" ]] || [[ -t 0 ]]; then
         read -rp "Do you want to replace it with a new key? [y/N]: " REPLACE_KEY
     else
         REPLACE_KEY="n"
@@ -139,7 +139,7 @@ if [[ "$REPLACE_KEY" =~ ^[Yy]$ ]]; then
     echo "2. Paste existing private key"
     echo "3. Skip client key setup"
     echo ""
-    if [[ -t 0 ]]; then
+    if [[ "${UBUNTU_SETUP_INTERACTIVE:-}" = "true" ]] || [[ -t 0 ]]; then
         read -rp "Choose option [1-3]: " KEY_OPTION
     else
         KEY_OPTION="1"
@@ -149,7 +149,7 @@ if [[ "$REPLACE_KEY" =~ ^[Yy]$ ]]; then
     case $KEY_OPTION in
         1)
             # Generate new key pair
-            if [[ -t 0 ]]; then
+            if [[ "${UBUNTU_SETUP_INTERACTIVE:-}" = "true" ]] || [[ -t 0 ]]; then
                 read -rp "Enter email for key comment [$(run_as_user git config --global user.email 2>/dev/null || echo "user@$(hostname)")]: " KEY_EMAIL
             else
                 KEY_EMAIL=$(run_as_user git config --global user.email 2>/dev/null || echo "user@$(hostname)")
@@ -272,7 +272,7 @@ if command -v systemctl &>/dev/null; then
     else
         echo "⚠️  SSH service is not running"
         if [[ $EUID -eq 0 ]] || sudo -n true 2>/dev/null; then
-            if [[ -t 0 ]]; then
+            if [[ "${UBUNTU_SETUP_INTERACTIVE:-}" = "true" ]] || [[ -t 0 ]]; then
                 read -rp "Do you want to start the SSH service? [Y/n]: " START_SSH
             else
                 START_SSH="y"
