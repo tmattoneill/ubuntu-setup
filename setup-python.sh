@@ -80,7 +80,7 @@ echo "✅ current Python: $(python --version)"
 
 ## === OPTIONAL: Virtualenv + pipx ===
 echo "📦 Installing virtualenv and pipx..."
-pip install virtualenv pipx
+pip install --user virtualenv pipx
 pipx ensurepath
 
 echo "✅ Python dev environment is ready."

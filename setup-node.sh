@@ -29,9 +29,10 @@ fi
 
 # Load NVM into current session (disable strict mode temporarily for NVM)
 # shellcheck disable=SC1090
-set +u  # Temporarily disable unbound variable checking for NVM
+set +euo  # Temporarily disable strict mode for NVM
+export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-set -u  # Re-enable unbound variable checking
+set -euo pipefail  # Re-enable strict mode
 
 # Install + use latest LTS Node
 if ! command -v node &>/dev/null; then

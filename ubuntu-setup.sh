@@ -6,7 +6,7 @@ set -euo pipefail
 ## Supports both root and user execution with proper privilege handling
 
 # Script metadata
-SCRIPT_VERSION="2.0.3"
+SCRIPT_VERSION="2.0.4"
 
 # Determine script directory - handle both local execution and curl|bash
 if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
@@ -64,11 +64,12 @@ download_scripts() {
         local dest="$SCRIPT_DIR/$script"
         
         echo -n "  Downloading $script... "
-        if curl -fsSL "$url" -o "$dest"; then
+        if curl -fsSL "$url" -o "$dest" && [[ -s "$dest" ]] && head -1 "$dest" | grep -q "#!/bin/bash"; then
             chmod +x "$dest" || echo "⚠️ Could not make $script executable"
             echo "✅"
         else
             echo "❌"
+            [[ -f "$dest" ]] && rm -f "$dest"  # Remove corrupted download
             failed_downloads+=("$script")
         fi
     done
