@@ -7,7 +7,21 @@ set -euo pipefail
 
 # Script metadata
 SCRIPT_VERSION="1.0.0"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Determine script directory - handle both local execution and curl|bash
+if [[ "${BASH_SOURCE[0]:-}" ]]; then
+    # Script is being executed from a file
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+elif [[ "$0" != "bash" ]]; then
+    # Script is being executed directly
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+else
+    # Script is being piped into bash (curl | bash scenario)
+    # In this case, we need to download the required scripts
+    SCRIPT_DIR="/tmp/ubuntu-setup-$$"
+    REMOTE_REPO="https://raw.githubusercontent.com/tmattoneill/ubuntu-setup/main"
+    DOWNLOAD_MODE=true
+fi
 
 # Color codes for output
 RED='\033[0;31m'
@@ -17,6 +31,67 @@ BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
+
+# Download required scripts when running via curl|bash
+download_scripts() {
+    if [[ "${DOWNLOAD_MODE:-}" != "true" ]]; then
+        return 0
+    fi
+    
+    log "INFO" "Setting up temporary directory for script downloads..."
+    mkdir -p "$SCRIPT_DIR"
+    
+    local required_scripts=(
+        "00-system-update.sh"
+        "01-setup-user.sh"
+        "02-setup-git.sh"
+        "03-setup-nginx.sh"
+        "04-setup-docker.sh"
+        "05-setup-fonts.sh"
+        "06-setup-ssh.sh"
+        "07-setup-shell.sh"
+        "setup-node.sh"
+        "setup-python.sh"
+        "setup-cockpit.sh"
+        "setup-webmin.sh"
+    )
+    
+    log "INFO" "Downloading required scripts from GitHub..."
+    local failed_downloads=()
+    
+    for script in "${required_scripts[@]}"; do
+        local url="$REMOTE_REPO/$script"
+        local dest="$SCRIPT_DIR/$script"
+        
+        echo -n "  Downloading $script... "
+        if curl -fsSL "$url" -o "$dest"; then
+            chmod +x "$dest"
+            echo "✅"
+        else
+            echo "❌"
+            failed_downloads+=("$script")
+        fi
+    done
+    
+    if [[ ${#failed_downloads[@]} -gt 0 ]]; then
+        log "ERROR" "Failed to download required scripts:"
+        for script in "${failed_downloads[@]}"; do
+            log "ERROR" "  - $script"
+        done
+        log "ERROR" "Please check your internet connection and try again"
+        exit 1
+    fi
+    
+    log "INFO" "All scripts downloaded successfully ✅"
+}
+
+# Cleanup downloaded scripts
+cleanup_downloads() {
+    if [[ "${DOWNLOAD_MODE:-}" == "true" ]] && [[ -d "$SCRIPT_DIR" ]]; then
+        log "INFO" "Cleaning up temporary files..."
+        rm -rf "$SCRIPT_DIR"
+    fi
+}
 
 # Logging function
 log() {
@@ -61,6 +136,9 @@ check_dependencies() {
         log "ERROR" "This script is designed for Ubuntu systems only"
         exit 1
     fi
+    
+    # Download scripts if running via curl|bash
+    download_scripts
     
     # Check if required scripts exist
     local missing_scripts=()
@@ -340,11 +418,15 @@ run_installation() {
     fi
     
     log "INFO" "🎯 Ubuntu server setup complete! Enjoy your new environment!"
+    
+    # Clean up downloaded files if in download mode
+    cleanup_downloads
 }
 
 # Cleanup function
 cleanup() {
     local exit_code=$?
+    cleanup_downloads
     if [[ $exit_code -ne 0 ]]; then
         echo ""
         log "ERROR" "Setup interrupted (exit code: $exit_code)"
