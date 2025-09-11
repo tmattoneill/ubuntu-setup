@@ -6,7 +6,7 @@ set -euo pipefail
 ## Supports both root and user execution with proper privilege handling
 
 # Script metadata
-SCRIPT_VERSION="1.0.3"
+SCRIPT_VERSION="1.0.4"
 
 # Determine script directory - handle both local execution and curl|bash
 if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
@@ -487,15 +487,20 @@ main() {
     check_dependencies
     handle_privileges
     
-    if [[ "$skip_prompts" = false ]]; then
+    # Check if we're in an interactive session
+    if [[ "$skip_prompts" = false ]] && [[ -t 0 ]] && [[ -t 1 ]]; then
         prompt_for_options
     else
-        # Auto mode - install everything
+        # Auto mode - either requested or no TTY available (like curl|bash)
         INSTALL_DEV="y"
         INSTALL_WEB="y"
         INSTALL_MGMT="n"  # Management interfaces off by default in auto mode
         INSTALL_FONTS="y"
-        log "INFO" "Auto mode: Installing all core and development components"
+        if [[ ! -t 0 ]] || [[ ! -t 1 ]]; then
+            log "INFO" "No TTY detected - running in automatic mode"
+        else
+            log "INFO" "Auto mode requested: Installing all core and development components"
+        fi
     fi
     
     run_installation
