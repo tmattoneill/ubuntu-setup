@@ -243,7 +243,7 @@ Host gitlab.com
 #     IdentityFile ~/.ssh/id_rsa
 EOF
     
-    run_as_user chmod 600 "$SSH_CONFIG"
+    run_as_user chmod 600 "$SSH_CONFIG" 2>/dev/null || echo "⚠️ Could not set SSH config permissions (file may be immutable)"
     echo "✅ SSH config created with useful defaults"
 else
     echo "✅ SSH config already exists"

@@ -118,10 +118,10 @@ else
     fi
 fi
 
-# Configure git
+# Configure git  
 echo "⚙️  Configuring Git..."
-run_as_user git config --global user.name "$USER_NAME"
-run_as_user git config --global user.email "$USER_EMAIL"
+run_as_user git config --global user.name "$USER_NAME" || { echo "❌ Failed to set git user.name"; exit 1; }
+run_as_user git config --global user.email "$USER_EMAIL" || { echo "❌ Failed to set git user.email"; exit 1; }
 
 # Set up some sensible defaults
 echo "🔧 Setting up Git defaults..."

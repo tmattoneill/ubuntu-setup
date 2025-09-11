@@ -6,7 +6,7 @@ set -euo pipefail
 ## Supports both root and user execution with proper privilege handling
 
 # Script metadata
-SCRIPT_VERSION="2.0.5"
+SCRIPT_VERSION="2.0.6"
 
 # Determine script directory - handle both local execution and curl|bash
 if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
@@ -295,10 +295,10 @@ prompt_for_options() {
     
     echo ""
     log "INFO" "Installation plan:"
-    echo "  Development Environment: $([ "$INSTALL_DEV" =~ ^[Yy]$ ] && echo "✅ Yes" || echo "❌ No")"
-    echo "  Web Services: $([ "$INSTALL_WEB" =~ ^[Yy]$ ] && echo "✅ Yes" || echo "❌ No")"
-    echo "  Management Interfaces: $([ "$INSTALL_MGMT" =~ ^[Yy]$ ] && echo "✅ Yes" || echo "❌ No")"
-    echo "  Terminal Fonts: $([ "$INSTALL_FONTS" =~ ^[Yy]$ ] && echo "✅ Yes" || echo "❌ No")"
+    echo "  Development Environment: $([[ "$INSTALL_DEV" =~ ^[Yy]$ ]] && echo "✅ Yes" || echo "❌ No")"
+    echo "  Web Services: $([[ "$INSTALL_WEB" =~ ^[Yy]$ ]] && echo "✅ Yes" || echo "❌ No")"
+    echo "  Management Interfaces: $([[ "$INSTALL_MGMT" =~ ^[Yy]$ ]] && echo "✅ Yes" || echo "❌ No")"
+    echo "  Terminal Fonts: $([[ "$INSTALL_FONTS" =~ ^[Yy]$ ]] && echo "✅ Yes" || echo "❌ No")"
     echo ""
     
     read -rp "Continue with this configuration? [Y/n]: " CONTINUE_SETUP
