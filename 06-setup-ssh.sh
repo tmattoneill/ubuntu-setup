@@ -127,7 +127,7 @@ else
         read -rp "Do you want to generate a new SSH key pair for this user? [Y/n]: " REPLACE_KEY
         REPLACE_KEY=${REPLACE_KEY:-y}
     else
-        REPLACE_KEY="n"
+        REPLACE_KEY="y"
         echo "Do you want to generate a new SSH key pair for this user? [Y/n]: $REPLACE_KEY (auto)"
     fi
 fi
@@ -142,8 +142,8 @@ if [[ "$REPLACE_KEY" =~ ^[Yy]$ ]]; then
     if [[ -t 0 ]]; then
         read -rp "Choose option [1-3]: " KEY_OPTION
     else
-        KEY_OPTION="3"
-        echo "Choose option [1-3]: $KEY_OPTION (auto - skip)"
+        KEY_OPTION="1"
+        echo "Choose option [1-3]: $KEY_OPTION (auto - generate)"
     fi
     
     case $KEY_OPTION in

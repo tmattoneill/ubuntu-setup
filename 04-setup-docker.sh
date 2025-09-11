@@ -202,7 +202,7 @@ fi
 DOCKER_DAEMON_CONFIG="/etc/docker/daemon.json"
 if [[ ! -f "$DOCKER_DAEMON_CONFIG" ]]; then
     echo "⚙️  Creating Docker daemon configuration..."
-    run_cmd cat > "$DOCKER_DAEMON_CONFIG" << 'EOF'
+    cat > /tmp/daemon.json << 'EOF'
 {
   "log-driver": "json-file",
   "log-opts": {
@@ -212,6 +212,8 @@ if [[ ! -f "$DOCKER_DAEMON_CONFIG" ]]; then
   "storage-driver": "overlay2"
 }
 EOF
+    run_cmd cp /tmp/daemon.json "$DOCKER_DAEMON_CONFIG"
+    rm -f /tmp/daemon.json
     
     echo "🔄 Restarting Docker to apply configuration..."
     run_cmd systemctl restart docker
