@@ -36,13 +36,13 @@ For a complete automated setup:
 
 ```bash
 # Download and run the main script
-curl -fsSL https://raw.githubusercontent.com/your-repo/ubuntu-setup/main/ubuntu-setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/tmattoneill/ubuntu-setup/main/ubuntu-setup.sh | bash
 ```
 
 Or clone the repository first:
 
 ```bash
-git clone https://github.com/your-repo/ubuntu-setup.git
+git clone https://github.com/tmattoneill/ubuntu-setup.git
 cd ubuntu-setup
 chmod +x ubuntu-setup.sh
 sudo ./ubuntu-setup.sh
