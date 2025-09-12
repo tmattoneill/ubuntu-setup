@@ -3,6 +3,34 @@ set -euo pipefail
 
 echo "🐍 Installing Python 3.11, pip, pyenv, and development tools..."
 
+# Function to run commands as the target user
+run_as_user() {
+    if [[ $EUID -eq 0 ]]; then
+        # Running as root, need to determine target user
+        if [[ -n "${SETUP_USERNAME:-}" ]]; then
+            sudo -u "$SETUP_USERNAME" "$@"
+        else
+            echo "❌ SETUP_USERNAME not set and running as root"
+            exit 1
+        fi
+    else
+        # Running as user
+        "$@"
+    fi
+}
+
+get_user_home() {
+    if [[ $EUID -eq 0 ]]; then
+        if [[ -n "${SETUP_USERNAME:-}" ]]; then
+            echo "/home/$SETUP_USERNAME"
+        else
+            echo "/root"
+        fi
+    else
+        echo "${HOME:-/tmp}"
+    fi
+}
+
 ## === SYSTEM DEPS ===
 echo "📦 Installing system packages and build dependencies..."
 sudo apt update
@@ -20,34 +48,34 @@ sudo apt install -y python3.11 python3.11-venv python3.11-distutils
 
 # Install pip for Python 3.11
 echo "📦 Installing pip for Python 3.11..."
-curl --max-time 30 --retry 3 --retry-delay 2 -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+run_as_user bash -c 'curl --max-time 30 --retry 3 --retry-delay 2 -sS https://bootstrap.pypa.io/get-pip.py | python3.11'
 
-# Ensure ~/.local/bin is in PATH
-ZSHRC="${HOME:-/tmp}/.zshrc"
-if ! grep -q '.local/bin' "$ZSHRC"; then
+# Get user's home directory and zshrc
+USER_HOME=$(get_user_home)
+ZSHRC="$USER_HOME/.zshrc"
+if ! grep -q '.local/bin' "$ZSHRC" 2>/dev/null; then
   echo '🔧 Adding ~/.local/bin to PATH in ~/.zshrc'
-  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$ZSHRC"
-  export PATH="${HOME:-/tmp}/.local/bin:$PATH"
+  run_as_user bash -c 'echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> '"$ZSHRC"
 fi
 
 # Symlink python to python3.11 for compatibility (optional)
 sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
 
 echo "✅ Python version: $(python --version)"
-echo "✅ pip version: $(pip --version)"
+echo "✅ pip version: $(run_as_user pip --version)"
 
 ## === PYENV INSTALL ===
-if [ ! -d "${HOME:-/tmp}/.pyenv" ]; then
+if [ ! -d "$USER_HOME/.pyenv" ]; then
   echo "📥 Installing pyenv..."
-  curl --max-time 60 --retry 3 --retry-delay 2 https://pyenv.run | bash
+  run_as_user bash -c 'curl --max-time 60 --retry 3 --retry-delay 2 https://pyenv.run | bash'
 else
   echo "✅ pyenv already installed."
 fi
 
 # Add pyenv to shell startup if missing
-if ! grep -q 'pyenv init' "$ZSHRC"; then
+if ! grep -q 'pyenv init' "$ZSHRC" 2>/dev/null; then
   echo '🔧 Adding pyenv config to ~/.zshrc...'
-  cat <<'EOF' >> "$ZSHRC"
+  run_as_user bash -c 'cat <<'\''EOF'\'' >> '"$ZSHRC"'
 
 # pyenv
 export PYENV_ROOT="$HOME/.pyenv"
@@ -57,31 +85,22 @@ eval "$(pyenv init -)"
 EOF
 fi
 
-# Load pyenv immediately (disable strict mode temporarily for pyenv)
-export PYENV_ROOT="${HOME:-/tmp}/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-set +u  # Temporarily disable unbound variable checking for pyenv
-eval "$(pyenv init --path)"
-eval "$(pyenv init -)"
-set -u  # Re-enable unbound variable checking
-
 # Install Python via pyenv
 PYENV_PYTHON="3.11.9"
-if ! pyenv versions | grep -q "$PYENV_PYTHON"; then
+if ! run_as_user bash -c 'export PYENV_ROOT="$HOME/.pyenv"; export PATH="$PYENV_ROOT/bin:$PATH"; pyenv versions' | grep -q "$PYENV_PYTHON"; then
   echo "🐍 Installing Python $PYENV_PYTHON via pyenv..."
-  pyenv install "$PYENV_PYTHON"
+  run_as_user bash -c 'export PYENV_ROOT="$HOME/.pyenv"; export PATH="$PYENV_ROOT/bin:$PATH"; pyenv install '"$PYENV_PYTHON"
 else
   echo "✅ Python $PYENV_PYTHON already installed via pyenv"
 fi
 
-pyenv global "$PYENV_PYTHON"
-echo "✅ pyenv version: $(pyenv --version)"
-echo "✅ current Python: $(python --version)"
+run_as_user bash -c 'export PYENV_ROOT="$HOME/.pyenv"; export PATH="$PYENV_ROOT/bin:$PATH"; pyenv global '"$PYENV_PYTHON"
+echo "✅ pyenv version: $(run_as_user bash -c 'export PYENV_ROOT="$HOME/.pyenv"; export PATH="$PYENV_ROOT/bin:$PATH"; pyenv --version')"
 
 ## === OPTIONAL: Virtualenv + pipx ===
 echo "📦 Installing virtualenv and pipx..."
-pip install --user virtualenv pipx
-pipx ensurepath
+run_as_user pip install --user virtualenv pipx
+run_as_user pipx ensurepath
 
 echo "✅ Python dev environment is ready."
 echo "💡 Restart your shell or run 'exec zsh' to activate pyenv."
