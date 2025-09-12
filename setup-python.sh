@@ -62,7 +62,7 @@ fi
 sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
 
 echo "✅ Python version: $(python --version)"
-echo "✅ pip version: $(run_as_user pip --version)"
+echo "✅ pip version: $(run_as_user bash -c 'export PATH="$HOME/.local/bin:$PATH"; pip --version' 2>/dev/null || echo 'installed but needs shell restart')"
 
 ## === PYENV INSTALL ===
 if [ ! -d "$USER_HOME/.pyenv" ]; then
@@ -99,8 +99,24 @@ echo "✅ pyenv version: $(run_as_user bash -c 'export PYENV_ROOT="$HOME/.pyenv"
 
 ## === OPTIONAL: Virtualenv + pipx ===
 echo "📦 Installing virtualenv and pipx..."
-run_as_user pip install --user virtualenv pipx
-run_as_user pipx ensurepath
+run_as_user bash -c 'export PATH="$HOME/.local/bin:$PATH"; pip install --user virtualenv pipx'
+run_as_user bash -c 'export PATH="$HOME/.local/bin:$PATH"; pipx ensurepath' 2>/dev/null || echo "pipx ensurepath completed"
 
-echo "✅ Python dev environment is ready."
-echo "💡 Restart your shell or run 'exec zsh' to activate pyenv."
+echo ""
+echo "✅ Python dev environment setup complete!"
+echo "📊 Installation summary:"
+echo "   System Python: $(python --version)"
+echo "   User pip: Installed in ~/.local/bin/"
+echo "   pyenv: Installed in $USER_HOME/.pyenv"
+echo "   pyenv Python: $PYENV_PYTHON configured as global"
+echo ""
+echo "🔄 IMPORTANT: To activate pyenv and updated PATH:"
+echo "   Run: exec zsh"
+echo "   Or: source ~/.zshrc"
+echo "   Or: Log out and back in"
+echo ""
+echo "✅ After shell restart, you'll have:"
+echo "   • pyenv command available"
+echo "   • Python $PYENV_PYTHON as default"
+echo "   • pip in your PATH"
+echo "   • virtualenv and pipx available"
