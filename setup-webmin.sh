@@ -11,6 +11,12 @@ echo "[+] Adding Webmin repository and key..."
 sudo apt update
 sudo apt install -y software-properties-common apt-transport-https curl gnupg2
 
+# Remove any existing webmin repository and keys first
+sudo rm -f /etc/apt/sources.list.d/webmin.list
+sudo rm -f /usr/share/keyrings/webmin.gpg
+
+# Use the modern keyring method
+echo "[+] Adding Webmin GPG key to keyring..."
 curl -fsSL https://download.webmin.com/jcameron-key.asc | sudo gpg --dearmor -o /usr/share/keyrings/webmin.gpg
 echo "deb [signed-by=/usr/share/keyrings/webmin.gpg] https://download.webmin.com/download/repository sarge contrib" | sudo tee /etc/apt/sources.list.d/webmin.list
 

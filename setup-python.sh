@@ -5,7 +5,16 @@ echo "🐍 Installing Python 3.11, pip, pyenv, and development tools..."
 
 ## === SYSTEM DEPS ===
 echo "📦 Installing system packages and build dependencies..."
-sudo apt update
+
+# Check for problematic repositories and handle gracefully
+echo "🔍 Checking for repository issues..."
+if sudo apt update 2>&1 | grep -q "webmin"; then
+    echo "⚠️  Detected Webmin repository issue. Temporarily disabling..."
+    sudo mv /etc/apt/sources.list.d/webmin.list /etc/apt/sources.list.d/webmin.list.disabled 2>/dev/null || true
+    sudo apt update
+else
+    echo "✅ Repository update successful"
+fi
 sudo apt install -y \
   software-properties-common curl build-essential \
   zlib1g-dev libssl-dev libbz2-dev libreadline-dev libsqlite3-dev \
