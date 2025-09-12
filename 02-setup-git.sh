@@ -120,6 +120,10 @@ fi
 
 # Configure git  
 echo "⚙️  Configuring Git..."
+
+# Ensure we're in the user's home directory for git config
+cd "$(get_user_home)" || { echo "❌ Failed to access user home directory"; exit 1; }
+
 run_as_user git config --global user.name "$USER_NAME" || { echo "❌ Failed to set git user.name"; exit 1; }
 run_as_user git config --global user.email "$USER_EMAIL" || { echo "❌ Failed to set git user.email"; exit 1; }
 
