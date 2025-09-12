@@ -5,15 +5,6 @@ echo "🐍 Installing Python 3.11, pip, pyenv, and development tools..."
 
 ## === SYSTEM DEPS ===
 echo "📦 Installing system packages and build dependencies..."
-
-# Remove any problematic Webmin repository that might interfere with apt
-if [[ -f /etc/apt/sources.list.d/webmin.list ]]; then
-    echo "🧹 Removing problematic Webmin repository..."
-    sudo rm -f /etc/apt/sources.list.d/webmin.list
-    sudo rm -f /usr/share/keyrings/webmin.gpg 2>/dev/null || true
-    echo "✅ Webmin repository removed"
-fi
-
 sudo apt update
 sudo apt install -y \
   software-properties-common curl build-essential \
