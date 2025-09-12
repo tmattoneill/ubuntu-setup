@@ -7,9 +7,8 @@ echo "🐍 Installing Python 3.11, pip, pyenv, and development tools..."
 echo "📦 Installing system packages and build dependencies..."
 
 # Remove any problematic Webmin repository that might interfere with apt
-echo "🧹 Cleaning up problematic repositories..."
 if [[ -f /etc/apt/sources.list.d/webmin.list ]]; then
-    echo "⚠️  Removing problematic Webmin repository..."
+    echo "🧹 Removing problematic Webmin repository..."
     sudo rm -f /etc/apt/sources.list.d/webmin.list
     sudo rm -f /usr/share/keyrings/webmin.gpg 2>/dev/null || true
     echo "✅ Webmin repository removed"
